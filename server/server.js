@@ -625,9 +625,9 @@ io.on("connection", (socket) => {
     });
     cb?.({ ok: true, ...response.data });
   } catch (error) {
-    console.error("AI error:", error?.response?.data || error.message);
-    cb?.({ ok: false, message: "Không gọi được AI Python." });
-  }
+  console.error("AI error detail:", error?.response?.data || error?.message || error);
+  cb?.({ ok: false, message: "Không gọi được AI Python." });
+}
 });
 
   socket.on("disconnect", () => {
