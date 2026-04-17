@@ -585,30 +585,32 @@ def hard_move(board: chess.Board):
 @app.route('/best-move', methods=['POST'])
 def best_move():
     data = request.get_json()
-
     fen = data.get('fen')
-    level = data.get('level', 1)
+    level = data.get('level', 'easy')
 
     if not fen:
-        return jsonify({"error": "Missing FEN"}), 400
+        return jsonify({"move": None, "error": "Thiếu FEN"}), 400
 
-    board = chess.Board(fen)
+    try:
+        board = chess.Board(fen)
+    except Exception:
+        return jsonify({"move": None, "error": "FEN không hợp lệ"}), 400
 
-    # level -> depth
-    depth = 1 if level == "easy" else 2
+    TRANSPOSITION_TABLE.clear()
+    KILLER_MOVES.clear()
+    HISTORY_HEURISTIC.clear()
 
-    best_move = None
+    if level == 'easy':
+        move = easy_move(board)
+    else:
+        move = hard_move(board)
 
-    for move in board.legal_moves:
-        best_move = move
-        break
+    if move is None:
+        return jsonify({"move": None})
 
-    if best_move is None:
-        return jsonify({"error": "No move"}), 400
+    return jsonify({"move": move.uci()})
+import os
 
-    return jsonify({
-        "move": best_move.uci()
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
