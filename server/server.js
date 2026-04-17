@@ -25,9 +25,6 @@ const io = new Server(server, {
 });
 
 
-const PORT = 3001;
-const AI_URL = "http://localhost:5000";
-
 const START_FEN_WHITE = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const START_FEN_BLACK = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1";
 
