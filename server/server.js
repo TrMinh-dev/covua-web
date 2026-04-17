@@ -24,7 +24,6 @@ const io = new Server(server, {
   }
 });
 
-
 const START_FEN_WHITE = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const START_FEN_BLACK = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1";
 
@@ -619,13 +618,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("ai:move", async ({ level, fen }, cb) => {
-    try {
-      const response = await axios.post(`${AI_URL}/best-move`, { level, fen });
-      cb?.({ ok: true, ...response.data });
-    } catch {
-      cb?.({ ok: false, message: "Không gọi được AI Python." });
-    }
-  });
+  try {
+    const response = await axios.post(`${AI_URL}/best-move`, {
+      level,
+      fen
+    });
+    cb?.({ ok: true, ...response.data });
+  } catch (error) {
+    console.error("AI error:", error?.response?.data || error.message);
+    cb?.({ ok: false, message: "Không gọi được AI Python." });
+  }
+});
 
   socket.on("disconnect", () => {
     const code = socket.data.roomCode;
