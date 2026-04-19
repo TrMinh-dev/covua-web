@@ -1,60 +1,70 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Chess } from 'chess.js'
-import { io } from 'socket.io-client'
-import './App.css'
+import { useEffect, useMemo, useRef, useState } from 'react' // Import các hook React: useState để lưu state, useEffect để xử lý side effect, useMemo để tối ưu tính toán, useRef để giữ giá trị giữa các lần render
+import { Chess } from 'chess.js' // Import thư viện chess.js để xử lý luật cờ vua, kiểm tra nước đi hợp lệ, FEN, trạng thái chiếu hết...
+import { io } from 'socket.io-client' // Import socket.io client để giao tiếp realtime với server
+import './App.css' // Import file CSS giao diện
 
-import wp from './assets/wp.png'
-import wr from './assets/wr.png'
-import wn from './assets/wn.png'
-import wb from './assets/wb.png'
-import wq from './assets/wq.png'
-import wk from './assets/wk.png'
-import bp from './assets/bp.png'
-import br from './assets/br.png'
-import bn from './assets/bn.png'
-import bb from './assets/bb.png'
-import bq from './assets/bq.png'
-import bk from './assets/bk.png'
+import wp from './assets/wp.png' // Ảnh quân tốt trắng
+import wr from './assets/wr.png' // Ảnh quân xe trắng
+import wn from './assets/wn.png' // Ảnh quân mã trắng
+import wb from './assets/wb.png' // Ảnh quân tượng trắng
+import wq from './assets/wq.png' // Ảnh quân hậu trắng
+import wk from './assets/wk.png' // Ảnh quân vua trắng
+import bp from './assets/bp.png' // Ảnh quân tốt đen
+import br from './assets/br.png' // Ảnh quân xe đen
+import bn from './assets/bn.png' // Ảnh quân mã đen
+import bb from './assets/bb.png' // Ảnh quân tượng đen
+import bq from './assets/bq.png' // Ảnh quân hậu đen
+import bk from './assets/bk.png' // Ảnh quân vua đen
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
-const socket = io(SERVER_URL, { autoConnect: true })
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001' // Lấy URL server từ biến môi trường; nếu chưa cấu hình thì dùng localhost
+const socket = io(SERVER_URL, { autoConnect: true }) // Tạo kết nối socket tới server ngay khi app chạy
 
 const PIECES = {
   wp, wr, wn, wb, wq, wk,
   bp, br, bn, bb, bq, bk
-}
+} // Object ánh xạ mã quân cờ sang file ảnh để render giao diện
 
-const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] // Danh sách cột chuẩn của bàn cờ
 
 function getSquares(orientation) {
+  // Hàm tạo ra danh sách 64 ô cờ theo hướng nhìn của người chơi
+  // Nếu người chơi cầm trắng thì hiển thị theo chiều trắng nhìn lên
+  // Nếu người chơi cầm đen thì đảo chiều lại để đen nhìn từ phía dưới
   const ranks = orientation === 'w' ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]
   const files = orientation === 'w' ? FILES : [...FILES].reverse()
   const out = []
 
   for (const rank of ranks) {
     for (const file of files) {
-      out.push(`${file}${rank}`)
+      out.push(`${file}${rank}`) // Ghép tên cột + hàng để tạo ô cờ, ví dụ a8, b8...
     }
   }
 
-  return out
+  return out // Trả về mảng 64 ô để render bàn cờ
 }
 
 function squareColor(square) {
+  // Xác định màu của ô cờ là sáng hay tối
+  // Quy tắc: tổng chỉ số file + rank chẵn/lẻ sẽ quyết định màu
   const file = square.charCodeAt(0) - 96
   const rank = Number(square[1])
   return (file + rank) % 2 === 0 ? 'dark' : 'light'
 }
 
 function pieceKey(piece) {
+  // Chuyển object quân cờ thành key tương ứng trong object PIECES
+  // Ví dụ: quân tốt trắng -> "wp", vua đen -> "bk"
   return `${piece.color}${piece.type}`
 }
 
 function formatTurn(turn) {
+  // Chuyển lượt đi từ ký hiệu kỹ thuật sang chữ dễ hiểu
   return turn === 'w' ? 'Trắng' : 'Đen'
 }
 
 function detectStatus(chess) {
+  // Hàm kiểm tra trạng thái hiện tại của ván cờ
+  // Sau mỗi nước đi, hàm này dùng để biết trận đã kết thúc chưa, thắng/thua/hòa như thế nào
   if (chess.isCheckmate()) {
     const winner = chess.turn() === 'w' ? 'b' : 'w'
     return {
@@ -86,14 +96,18 @@ function detectStatus(chess) {
     winner: null,
     draw: false,
     text: chess.inCheck() ? 'Đang chiếu tướng.' : ''
-  }
+  } // Nếu trận chưa kết thúc thì chỉ trả về thông báo chiếu tướng hoặc rỗng
 }
 
 function validateName(name) {
+  // Kiểm tra tên người chơi có hợp lệ không
+  // Hợp lệ khi sau khi bỏ khoảng trắng đầu/cuối vẫn còn ký tự
   return name.trim().length > 0
 }
 
 function createInitialAiChess(playerColor, playerTurn) {
+  // Tạo trạng thái bàn cờ khởi đầu cho chế độ chơi với AI
+  // Tùy theo người chơi chọn màu gì và chọn đi trước hay đi sau
   const whiteToMove =
     (playerColor === 'w' && playerTurn === 'first') ||
     (playerColor === 'b' && playerTurn === 'second')
@@ -102,79 +116,85 @@ function createInitialAiChess(playerColor, playerTurn) {
     ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
     : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1'
 
-  return new Chess(fen)
+  return new Chess(fen) // Khởi tạo bàn cờ từ FEN tương ứng
 }
 
 export default function App() {
-  const [screen, setScreen] = useState('menu')
-  const [playerName, setPlayerName] = useState('')
-  const [nameError, setNameError] = useState('')
-  const [shakeName, setShakeName] = useState(false)
+  // Các state điều khiển toàn bộ ứng dụng
+  const [screen, setScreen] = useState('menu') // Màn hình hiện tại: menu, phòng chờ, setup, game...
+  const [playerName, setPlayerName] = useState('') // Tên người chơi
+  const [nameError, setNameError] = useState('') // Lỗi phần nhập tên
+  const [shakeName, setShakeName] = useState(false) // Hiệu ứng rung khi tên sai
 
-  const [joinCode, setJoinCode] = useState('')
-  const [joinError, setJoinError] = useState('')
-  const [shakeJoin, setShakeJoin] = useState(false)
+  const [joinCode, setJoinCode] = useState('') // Mã phòng nhập vào
+  const [joinError, setJoinError] = useState('') // Lỗi phần mã phòng
+  const [shakeJoin, setShakeJoin] = useState(false) // Hiệu ứng rung khi mã phòng sai
 
-  const [room, setRoom] = useState(null)
-  const [roomMessage, setRoomMessage] = useState('')
+  const [room, setRoom] = useState(null) // Thông tin phòng hiện tại
+  const [roomMessage, setRoomMessage] = useState('') // Thông báo trong phòng chờ
 
-  const [gameMode, setGameMode] = useState(null)
-  const [aiLevel, setAiLevel] = useState('easy')
-  const [playerColorChoice, setPlayerColorChoice] = useState('w')
-  const [playerTurnChoice, setPlayerTurnChoice] = useState('first')
+  const [gameMode, setGameMode] = useState(null) // Chế độ chơi: human hoặc ai
+  const [aiLevel, setAiLevel] = useState('easy') // Mức AI đang chọn
+  const [playerColorChoice, setPlayerColorChoice] = useState('w') // Màu cờ người chơi chọn trong chế độ AI
+  const [playerTurnChoice, setPlayerTurnChoice] = useState('first') // Lượt đi người chơi chọn trong chế độ AI
 
-  const [chess, setChess] = useState(new Chess())
-  const [selectedSquare, setSelectedSquare] = useState(null)
-  const [possibleMoves, setPossibleMoves] = useState([])
-  const [promotionMove, setPromotionMove] = useState(null)
-  const [statusText, setStatusText] = useState('')
-  const [resultText, setResultText] = useState('')
-  const [gameFinished, setGameFinished] = useState(false)
-  const [lastMove, setLastMove] = useState(null)
-  const [countdown, setCountdown] = useState(90)
+  const [chess, setChess] = useState(new Chess()) // Đối tượng Chess hiện tại, lưu trạng thái bàn cờ
+  const [selectedSquare, setSelectedSquare] = useState(null) // Ô đang được chọn
+  const [possibleMoves, setPossibleMoves] = useState([]) // Danh sách nước đi hợp lệ của ô đang chọn
+  const [promotionMove, setPromotionMove] = useState(null) // Lưu nước phong cấp tạm thời
+  const [statusText, setStatusText] = useState('') // Chuỗi trạng thái hiển thị bên panel
+  const [resultText, setResultText] = useState('') // Chuỗi kết quả trận đấu
+  const [gameFinished, setGameFinished] = useState(false) // Đánh dấu trận đã kết thúc chưa
+  const [lastMove, setLastMove] = useState(null) // Lưu nước đi gần nhất để tô màu
+  const [countdown, setCountdown] = useState(90) // Đồng hồ đếm ngược cho lượt đi
 
-  const [setupCountdown, setSetupCountdown] = useState(0)
-  const [randomCountdown, setRandomCountdown] = useState(0)
+  const [setupCountdown, setSetupCountdown] = useState(0) // Đồng hồ đếm ngược giai đoạn chọn màu/lượt
+  const [randomCountdown, setRandomCountdown] = useState(0) // Đồng hồ đếm ngược giai đoạn quay random
 
-  const countdownRef = useRef(null)
-  const setupCountdownRef = useRef(null)
-  const randomCountdownRef = useRef(null)
-  const toastTimerRef = useRef(null)
-  const ignoredRoomCodeRef = useRef(null)
+  const countdownRef = useRef(null) // Ref giữ interval đồng hồ lượt đi
+  const setupCountdownRef = useRef(null) // Ref giữ interval đồng hồ setup
+  const randomCountdownRef = useRef(null) // Ref giữ interval random setup
+  const toastTimerRef = useRef(null) // Ref giữ timeout của toast
+  const ignoredRoomCodeRef = useRef(null) // Ref lưu room vừa thoát để tránh nhận update muộn
 
-  const isAiGame = gameMode === 'ai'
+  const isAiGame = gameMode === 'ai' // Cờ kiểm tra có phải đang chơi AI không
 
-  const [toast, setToast] = useState('')
-  const [toastType, setToastType] = useState('info')
+  const [toast, setToast] = useState('') // Nội dung toast
+  const [toastType, setToastType] = useState('info') // Loại toast: info, warning, error
 
-  const [humanSetupRole, setHumanSetupRole] = useState(null)
-  const [humanColorChoice, setHumanColorChoice] = useState('w')
-  const [humanTurnChoice, setHumanTurnChoice] = useState('first')
+  const [humanSetupRole, setHumanSetupRole] = useState(null) // Vai trò trong setup người-vs-người: randomizing / chooser / waiting
+  const [humanColorChoice, setHumanColorChoice] = useState('w') // Màu cờ người được chọn quyết định
+  const [humanTurnChoice, setHumanTurnChoice] = useState('first') // Lượt đi người được chọn quyết định
 
   const myPlayer = useMemo(() => {
+    // Dùng useMemo để tránh phải tìm lại player trong room ở mọi lần render không cần thiết
     if (isAiGame) return null
     return room?.players?.find((p) => p.id === socket.id) || null
   }, [isAiGame, room])
 
   const myColor = useMemo(() => {
+    // Xác định màu cờ hiện tại của mình
+    // Nếu chơi AI thì lấy theo lựa chọn local
+    // Nếu chơi người thì lấy từ room do server gửi về
     if (isAiGame) return playerColorChoice
     return myPlayer?.color || 'w'
   }, [isAiGame, playerColorChoice, myPlayer])
 
-  const orientation = myColor === 'w' ? 'w' : 'b'
-  const squares = useMemo(() => getSquares(orientation), [orientation])
-  const opponent = room?.players?.find((p) => p.id !== socket.id)
+  const orientation = myColor === 'w' ? 'w' : 'b' // Hướng bàn cờ theo màu của mình
+  const squares = useMemo(() => getSquares(orientation), [orientation]) // Danh sách 64 ô theo hướng nhìn
+  const opponent = room?.players?.find((p) => p.id !== socket.id) // Tìm đối thủ trong phòng
 
   useEffect(() => {
+    // useEffect này chỉ chạy 1 lần để đăng ký các sự kiện socket
     const onRoomUpdate = (payload) => {
       if (ignoredRoomCodeRef.current && payload.roomCode === ignoredRoomCodeRef.current) {
-        return
+        return // Nếu đây là update của phòng vừa thoát thì bỏ qua
       }
 
       const me = payload.players?.find((p) => p.id === socket.id)
-      if (me?.hasExited) return
+      if (me?.hasExited) return // Nếu chính mình đã bị đánh dấu thoát thì không update UI nữa
 
-      setRoom(payload)
+      setRoom(payload) // Luôn lưu payload mới nhất từ server
 
       if (payload.status === 'waiting') {
         setScreen('waiting-room')
@@ -204,7 +224,7 @@ export default function App() {
         setPromotionMove(null)
 
         const amIChooser = payload.chooserId === socket.id
-        setHumanSetupRole(amIChooser ? 'chooser' : 'waiting')
+        setHumanSetupRole(amIChooser ? 'chooser' : 'waiting') // Nếu mình là người được chọn thì hiện form chọn, nếu không thì hiện màn chờ
 
         if (amIChooser) {
           setHumanColorChoice(payload.selectedColorByChooser || 'w')
@@ -216,7 +236,7 @@ export default function App() {
 
       if (payload.status === 'playing') {
         if (payload.fen && payload.fen !== 'start') {
-          setChess(new Chess(payload.fen))
+          setChess(new Chess(payload.fen)) // Đồng bộ bàn cờ theo FEN server gửi
         } else {
           setChess(new Chess())
         }
@@ -235,7 +255,7 @@ export default function App() {
 
       if (payload.status === 'finished') {
         if (payload.fen && payload.fen !== 'start') {
-          setChess(new Chess(payload.fen))
+          setChess(new Chess(payload.fen)) // Nếu có FEN cuối cùng thì update bàn cờ
         }
         setScreen('game')
         setGameMode('human')
@@ -247,20 +267,21 @@ export default function App() {
     }
 
     const onToast = ({ message, type }) => {
-      showToast(message, type || 'info')
+      showToast(message, type || 'info') // Nhận toast riêng do server gửi
     }
 
     socket.on('room:update', onRoomUpdate)
     socket.on('ui:toast', onToast)
 
     return () => {
-      socket.off('room:update', onRoomUpdate)
+      socket.off('room:update', onRoomUpdate) // Hủy lắng nghe khi component bị gỡ
       socket.off('ui:toast', onToast)
       clearTimeout(toastTimerRef.current)
     }
   }, [])
 
   useEffect(() => {
+    // useEffect này điều khiển đồng hồ đếm ngược cho lượt đi ở chế độ người-vs-người
     if (!room?.moveDeadlineAt || gameFinished || isAiGame) {
       clearInterval(countdownRef.current)
       return
@@ -271,13 +292,14 @@ export default function App() {
       setCountdown(remain)
     }
 
-    tick()
+    tick() // Chạy ngay 1 lần để tránh chờ 0.5s mới hiển thị
     countdownRef.current = setInterval(tick, 500)
 
     return () => clearInterval(countdownRef.current)
   }, [room?.moveDeadlineAt, gameFinished, isAiGame])
 
   useEffect(() => {
+    // Đồng hồ cho giai đoạn chờ người được chọn xác nhận màu/lượt
     if (!room?.chooserDeadlineAt || room?.status !== 'waiting-setup') {
       clearInterval(setupCountdownRef.current)
       setSetupCountdown(0)
@@ -296,6 +318,7 @@ export default function App() {
   }, [room?.chooserDeadlineAt, room?.status])
 
   useEffect(() => {
+    // Đồng hồ cho giai đoạn quay random chọn người được quyền chọn
     if (!room?.randomizingUntil || room?.status !== 'randomizing') {
       clearInterval(randomCountdownRef.current)
       setRandomCountdown(0)
@@ -314,23 +337,27 @@ export default function App() {
   }, [room?.randomizingUntil, room?.status])
 
   useEffect(() => {
+    // Luôn cập nhật dòng trạng thái mỗi khi bàn cờ hoặc kết quả thay đổi
     const s = detectStatus(chess)
     setStatusText(s.text || (gameFinished ? resultText : `Lượt đi: ${formatTurn(chess.turn())}`))
   }, [chess, gameFinished, resultText])
 
   function triggerNameError(message) {
+    // Hiện lỗi tên + bật animation rung nhẹ để người dùng dễ nhận biết
     setNameError(message)
     setShakeName(true)
     setTimeout(() => setShakeName(false), 600)
   }
 
   function triggerJoinError(message) {
+    // Hiện lỗi mã phòng + bật animation rung
     setJoinError(message)
     setShakeJoin(true)
     setTimeout(() => setShakeJoin(false), 600)
   }
 
   function ensureName() {
+    // Bắt buộc phải nhập tên trước khi thực hiện thao tác liên quan đến trận đấu
     if (!validateName(playerName)) {
       triggerNameError('Vui lòng nhập tên người chơi trước khi tiếp tục.')
       return false
@@ -340,6 +367,7 @@ export default function App() {
   }
 
   function resetBoardForNewGame() {
+    // Reset toàn bộ state bàn cờ và trạng thái ván đấu về mặc định
     const fresh = new Chess()
     setChess(fresh)
     setSelectedSquare(null)
@@ -351,6 +379,7 @@ export default function App() {
   }
 
   function resetToMenuLocal() {
+    // Reset toàn bộ UI phía client về màn hình menu
     setScreen('menu')
     setRoom(null)
     setRoomMessage('')
@@ -362,10 +391,12 @@ export default function App() {
   }
 
   function clearIgnoredRoom() {
+    // Xóa room code đang bị đánh dấu ignore
     ignoredRoomCodeRef.current = null
   }
 
   function handleCreateRoom() {
+    // Tạo phòng mới cho chế độ người-vs-người
     clearIgnoredRoom()
 
     if (!ensureName()) return
@@ -384,6 +415,7 @@ export default function App() {
   }
 
   function handleJoinRoom() {
+    // Vào phòng bằng mã phòng 4 chữ số
     clearIgnoredRoom()
 
     if (!ensureName()) return
@@ -405,6 +437,7 @@ export default function App() {
   }
 
   function handleRandomMatch() {
+    // Ghép ngẫu nhiên với người chơi khác đang chờ
     clearIgnoredRoom()
 
     if (!ensureName()) return
@@ -419,14 +452,15 @@ export default function App() {
 
       if (res.waitingRandom) {
         setScreen('waiting-room')
-        setRoomMessage(res.message)
+        setRoomMessage(res.message) // Nếu chưa ghép được ngay thì ở màn hình chờ
       } else {
-        setRoom(res.room)
+        setRoom(res.room) // Nếu ghép được ngay thì server sẽ gửi room
       }
     })
   }
 
   function startAiGame(level) {
+    // Vào flow chơi với AI, chỉ khác nhau ở level easy/hard
     clearIgnoredRoom()
 
     if (!ensureName()) return
@@ -436,6 +470,7 @@ export default function App() {
   }
 
   function confirmAiSetup() {
+    // Xác nhận lựa chọn màu cờ và lượt đi rồi bắt đầu ván với AI
     const fresh = createInitialAiChess(playerColorChoice, playerTurnChoice)
 
     setChess(fresh)
@@ -454,11 +489,12 @@ export default function App() {
     if (aiTurn === aiColor) {
       setTimeout(() => {
         maybeAiMove(fresh, playerColorChoice, aiLevel)
-      }, 300)
+      }, 300) // Nếu AI là bên đi trước thì gọi AI đi ngay sau 300ms
     }
   }
 
   function maybeAiMove(currentChess, currentPlayerColor = playerColorChoice, currentAiLevel = aiLevel) {
+    // Hàm kiểm tra xem đã tới lượt AI chưa, nếu đúng thì gọi server AI
     const c = currentChess || chess
     if (gameFinished) return
 
@@ -473,7 +509,7 @@ export default function App() {
         from: res.move.slice(0, 2),
         to: res.move.slice(2, 4),
         promotion: res.move[4] || 'q'
-      })
+      }) // Server trả nước đi dưới dạng UCI, ví dụ e2e4
 
       if (!move) return
 
@@ -489,27 +525,31 @@ export default function App() {
   }
 
   function getLegalMoves(square) {
+    // Lấy danh sách nước đi hợp lệ từ ô đang chọn ở dạng verbose
     return chess.moves({ square, verbose: true })
   }
 
   function canInteract() {
+    // Hàm kiểm tra xem người chơi có đang được phép thao tác không
     if (gameFinished) return false
 
     if (isAiGame) {
-      return chess.turn() === playerColorChoice
+      return chess.turn() === playerColorChoice // Chế độ AI: chỉ được đi khi tới lượt mình
     }
 
     if (!room || room.status !== 'playing') return false
     if (myPlayer?.hasExited) return false
-    return chess.turn() === myColor
+    return chess.turn() === myColor // Chế độ online: chỉ được đi khi tới lượt màu của mình
   }
 
   function selectSquare(square) {
+    // Lưu ô được chọn và lấy danh sách nước đi để highlight
     setSelectedSquare(square)
     setPossibleMoves(getLegalMoves(square))
   }
 
   function handleSquareClick(square) {
+    // Xử lý mọi thao tác click lên bàn cờ
     if (!canInteract()) return
 
     const piece = chess.get(square)
@@ -521,7 +561,7 @@ export default function App() {
 
       if (targetMove) {
         if (selectedPiece?.type === 'p' && (square.endsWith('8') || square.endsWith('1'))) {
-          setPromotionMove({ from: selectedSquare, to: square })
+          setPromotionMove({ from: selectedSquare, to: square }) // Nếu tốt đi đến hàng cuối thì không đi ngay, mà mở giao diện chọn phong cấp
           return
         }
 
@@ -530,25 +570,26 @@ export default function App() {
       }
 
       if (piece && piece.color === myColor) {
-        selectSquare(square)
+        selectSquare(square) // Nếu đang chọn quân mà bấm sang quân cùng màu thì đổi quân được chọn
         return
       }
 
       setSelectedSquare(null)
       setPossibleMoves([])
-      return
+      return // Nếu bấm vào ô không hợp lệ thì bỏ chọn
     }
 
     if (piece && piece.color === myColor) {
-      selectSquare(square)
+      selectSquare(square) // Nếu chưa chọn gì và bấm vào quân của mình thì chọn quân đó
     }
   }
 
   function makeMove(from, to, promotion = 'q') {
+    // Thực hiện nước đi cả ở chế độ AI lẫn online
     const next = new Chess(chess.fen())
     const move = next.move({ from, to, promotion })
 
-    if (!move) return
+    if (!move) return // Nếu nước đi không hợp lệ thì dừng
 
     setChess(next)
     setSelectedSquare(null)
@@ -564,7 +605,7 @@ export default function App() {
 
     if (isAiGame) {
       if (!status.finished) {
-        setTimeout(() => maybeAiMove(next, playerColorChoice, aiLevel), 300)
+        setTimeout(() => maybeAiMove(next, playerColorChoice, aiLevel), 300) // Sau khi mình đi thì tới lượt AI
       }
       return
     }
@@ -575,15 +616,17 @@ export default function App() {
       move: { from: move.from, to: move.to },
       turn: next.turn(),
       status
-    })
+    }) // Gửi toàn bộ trạng thái cần thiết lên server để đối thủ đồng bộ
   }
 
   function submitPromotion(pieceType) {
+    // Khi người chơi chọn quân phong cấp, thực hiện lại nước đi với loại quân được chọn
     if (!promotionMove) return
     makeMove(promotionMove.from, promotionMove.to, pieceType)
   }
 
   function handleConfirmHumanSetup() {
+    // Gửi lựa chọn màu cờ và lượt đi trong giai đoạn setup người-vs-người
     if (!room?.roomCode) return
 
     socket.emit(
@@ -602,6 +645,7 @@ export default function App() {
   }
 
   function handleResign() {
+    // Xử lý khi người chơi đầu hàng
     if (isAiGame) {
       setGameFinished(true)
       setResultText('Bạn đã đầu hàng.')
@@ -616,6 +660,7 @@ export default function App() {
   }
 
   function handleOfferDraw() {
+    // Xử lý xin hòa
     if (isAiGame) {
       setGameFinished(true)
       setResultText('Ván đấu hòa.')
@@ -632,10 +677,11 @@ export default function App() {
   }
 
   function handleExit() {
+    // Xử lý thoát trận / thoát phòng / thoát về menu
     const currentRoomCode = room?.roomCode
 
     if (currentRoomCode) {
-      ignoredRoomCodeRef.current = currentRoomCode
+      ignoredRoomCodeRef.current = currentRoomCode // Đánh dấu để bỏ qua các update trả về muộn từ room cũ
     }
 
     resetToMenuLocal()
@@ -646,8 +692,9 @@ export default function App() {
   }
 
   function handleRematch() {
+    // Xử lý chơi lại sau khi trận kết thúc
     if (isAiGame) {
-      setScreen('ai-setup')
+      setScreen('ai-setup') // Với AI thì quay về màn setup chọn màu/lượt
       return
     }
 
@@ -659,6 +706,7 @@ export default function App() {
   }
 
   function respondDraw(accept) {
+    // Trả lời yêu cầu xin hòa từ đối thủ
     socket.emit('game:respond-draw', { roomCode: room.roomCode, accept }, (res) => {
       if (!res?.ok) {
         showToast(res?.message || 'Không phản hồi được yêu cầu xin hòa.', 'error')
@@ -672,6 +720,7 @@ export default function App() {
   }
 
   function showToast(message, type = 'info') {
+    // Hiển thị toast tạm thời ở góc màn hình
     clearTimeout(toastTimerRef.current)
     setToast(message)
     setToastType(type)
@@ -683,6 +732,7 @@ export default function App() {
   }
 
   function renderMenu() {
+    // Render giao diện menu chính
     return (
       <div className="panel">
         <h1 className="title">Cờ Vua</h1>
@@ -713,7 +763,7 @@ export default function App() {
                 className={`input ${joinError ? 'error' : ''} ${shakeJoin ? 'shake' : ''}`}
                 placeholder="Ví dụ: 1234"
                 value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))} // Chỉ cho nhập số và tối đa 4 ký tự
               />
               {joinError && <div className="error-text">{joinError}</div>}
 
@@ -738,6 +788,7 @@ export default function App() {
   }
 
   function renderWaitingRoom() {
+    // Render giao diện phòng chờ khi đã tạo phòng hoặc đang chờ ghép random
     return (
       <div className="panel">
         <h1 className="title">Cờ Vua</h1>
@@ -759,6 +810,7 @@ export default function App() {
   }
 
   function renderHumanSetup() {
+    // Render giao diện setup trước trận ở chế độ người-vs-người
     const chooser = room?.players?.find((p) => p.id === room?.chooserId)
 
     return (
@@ -842,6 +894,7 @@ export default function App() {
   }
 
   function renderAiSetup() {
+    // Render giao diện thiết lập trước khi chơi với AI
     return (
       <div className="panel">
         <h1 className="title">Cờ Vua</h1>
@@ -880,9 +933,11 @@ export default function App() {
   }
 
   function renderBoard() {
-    const movesTo = possibleMoves.map((m) => m.to)
+    // Render giao diện chơi cờ chính
+    const movesTo = possibleMoves.map((m) => m.to) // Chỉ lấy ô đích để tiện highlight
 
     const checkedKingSquare = (() => {
+      // Tìm vị trí vua đang bị chiếu
       if (!chess.inCheck()) return null
 
       const board = chess.board()
@@ -918,8 +973,8 @@ export default function App() {
                   className={`square ${squareColor(sq)} ${isSelected ? 'selected' : ''} ${isLast ? 'last' : ''} ${isCheck ? 'check' : ''}`}
                   onClick={() => handleSquareClick(sq)}
                 >
-                  {isMove && !piece && <div className="dot" />}
-                  {isMove && piece && <div className="capture-ring" />}
+                  {isMove && !piece && <div className="dot" />} {/* Chấm tròn cho nước đi không ăn quân */}
+                  {isMove && piece && <div className="capture-ring" />} {/* Vòng tròn cho nước ăn quân */}
                   {piece && (
                     <img
                       src={PIECES[pieceKey(piece)]}

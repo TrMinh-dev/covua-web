@@ -1,7 +1,9 @@
+/* Áp dụng box-sizing cho toàn bộ phần tử để tính kích thước ổn định hơn */
 * {
   box-sizing: border-box;
 }
 
+/* Reset cơ bản cho html, body và root của React/Vite */
 html,
 body,
 #root {
@@ -11,6 +13,7 @@ body,
   width: 100%;
 }
 
+/* Thiết lập nền tổng thể cho trang */
 body {
   font-family: Arial, Helvetica, sans-serif;
   color: white;
@@ -22,6 +25,7 @@ body {
   position: relative;
 }
 
+/* Khung app chính, căn giữa nội dung toàn màn hình */
 .app {
   min-height: 100vh;
   width: 100%;
@@ -32,6 +36,7 @@ body {
   color: white;
 }
 
+/* Panel chính chứa toàn bộ giao diện */
 .panel {
   width: 100%;
   max-width: 1100px;
@@ -47,6 +52,7 @@ body {
   padding: 28px;
 }
 
+/* Tiêu đề chính */
 .title {
   text-align: center;
   color: #ffffff;
@@ -57,6 +63,7 @@ body {
   text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
+/* Lưới menu chính, chia 2 cột */
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(360px, 430px));
@@ -65,6 +72,7 @@ body {
   align-items: stretch;
 }
 
+/* Card dùng cho các khối menu/thông tin */
 .card {
   background: rgba(30, 41, 59, 0.46);
   backdrop-filter: blur(12px);
@@ -81,12 +89,14 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+/* Card nhập tên chiếm toàn bộ chiều ngang grid */
 .name-card {
   grid-column: 1 / -1;
   max-width: 600px;
   margin: 0 auto 20px auto;
 }
 
+/* Tiêu đề trong card */
 .card h2,
 .card h3 {
   margin: 0 0 14px 0;
@@ -94,6 +104,7 @@ body {
   text-align: center;
 }
 
+/* Đoạn mô tả trong card */
 .card p {
   color: #cbd5e1;
   margin: 0 0 14px 0;
@@ -101,10 +112,12 @@ body {
   line-height: 1.5;
 }
 
+/* Card chế độ chơi */
 .mode-card {
   min-height: 280px;
 }
 
+/* Khối căn giữa nhóm nút/thao tác */
 .center-actions {
   flex: 1;
   display: flex;
@@ -112,20 +125,24 @@ body {
   justify-content: center;
 }
 
+/* Hàng cần căn giữa */
 .center-row {
   justify-content: center;
 }
 
+/* Khu vực setup AI */
 .ai-setup-grid {
   display: flex;
   justify-content: center;
 }
 
+/* Card setup AI */
 .ai-setup-card {
   width: 100%;
   max-width: 560px;
 }
 
+/* Input và select dùng chung style */
 .input,
 .select {
   width: 100%;
@@ -144,10 +161,12 @@ body {
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.22);
 }
 
+/* Màu placeholder */
 .input::placeholder {
   color: #9fb0cc;
 }
 
+/* Hiệu ứng focus cho input/select */
 .input:focus,
 .select:focus {
   border-color: rgba(129, 140, 248, 0.65);
@@ -156,11 +175,13 @@ body {
     inset 0 1px 4px rgba(0, 0, 0, 0.22);
 }
 
+/* Trạng thái lỗi của input/select */
 .input.error,
 .select.error {
   border-color: #ef4444;
 }
 
+/* Dòng text báo lỗi */
 .error-text {
   color: #ef4444;
   font-size: 14px;
@@ -169,10 +190,12 @@ body {
   text-align: center;
 }
 
+/* Hiệu ứng rung khi lỗi */
 .shake {
   animation: shake 0.28s linear 2;
 }
 
+/* Keyframes rung ngang */
 @keyframes shake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
@@ -181,6 +204,7 @@ body {
   100% { transform: translateX(0); }
 }
 
+/* Hàng chứa các nút */
 .btn-row {
   display: flex;
   flex-wrap: wrap;
@@ -189,6 +213,7 @@ body {
   align-items: center;
 }
 
+/* Style nút cơ bản */
 .btn {
   min-width: 132px;
   height: 46px;
@@ -212,6 +237,7 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
+/* Hover nút */
 .btn:hover {
   transform: translateY(-2px);
   filter: brightness(1.05);
@@ -220,10 +246,12 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
+/* Khi nhấn nút */
 .btn:active {
   transform: translateY(0);
 }
 
+/* Các màu nút theo chức năng */
 .btn.primary {
   background: linear-gradient(135deg, #2563eb 0%, #4f46e5 45%, #7c3aed 100%);
 }
@@ -248,6 +276,7 @@ body {
   background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a855f7 100%);
 }
 
+/* Layout chính khi vào game: bàn cờ + panel bên phải */
 .game-layout {
   display: grid;
   grid-template-columns: 720px 1fr;
@@ -256,6 +285,7 @@ body {
   justify-content: center;
 }
 
+/* Khung chứa bàn cờ */
 .board-wrap {
   position: relative;
   width: 720px;
@@ -269,6 +299,7 @@ body {
   background: rgba(17, 24, 39, 0.72);
 }
 
+/* Bàn cờ 8x8 */
 .board {
   width: 100%;
   height: 100%;
@@ -277,6 +308,7 @@ body {
   grid-template-rows: repeat(8, 1fr);
 }
 
+/* Ô cờ */
 .square {
   position: relative;
   width: 100%;
@@ -287,14 +319,17 @@ body {
   user-select: none;
 }
 
+/* Ô sáng */
 .square.light {
   background: #f0d9b5;
 }
 
+/* Ô tối */
 .square.dark {
   background: #b58863;
 }
 
+/* Viền ô đang chọn */
 .square.selected::after {
   content: "";
   position: absolute;
@@ -303,6 +338,7 @@ body {
   box-sizing: border-box;
 }
 
+/* Tô màu ô của nước đi gần nhất */
 .square.last::before {
   content: "";
   position: absolute;
@@ -310,6 +346,7 @@ body {
   background: rgba(250, 204, 21, 0.35);
 }
 
+/* Tô đỏ ô vua đang bị chiếu */
 .square.check::before {
   content: "";
   position: absolute;
@@ -317,6 +354,7 @@ body {
   background: rgba(239, 68, 68, 0.45);
 }
 
+/* Chấm tròn hiển thị nước đi hợp lệ */
 .dot {
   width: 18px;
   height: 18px;
@@ -324,6 +362,7 @@ body {
   background: rgba(34, 197, 94, 0.8);
 }
 
+/* Vòng tròn bắt quân */
 .capture-ring {
   position: absolute;
   width: 60px;
@@ -333,6 +372,7 @@ body {
   box-sizing: border-box;
 }
 
+/* Ảnh quân cờ */
 .piece {
   width: 78%;
   height: 78%;
@@ -342,6 +382,7 @@ body {
   pointer-events: none;
 }
 
+/* Panel bên phải của bàn cờ */
 .side-panel {
   min-height: 720px;
   display: flex;
@@ -351,6 +392,7 @@ body {
   position: relative;
 }
 
+/* Hộp thông tin */
 .info-box {
   background: rgba(17, 24, 39, 0.52);
   backdrop-filter: blur(10px);
@@ -363,11 +405,13 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+/* Tiêu đề trong info-box */
 .info-box h3 {
   margin: 0 0 12px 0;
   color: white;
 }
 
+/* Dòng trạng thái */
 .status-line {
   margin: 8px 0;
   font-size: 16px;
@@ -375,6 +419,7 @@ body {
   line-height: 1.5;
 }
 
+/* Overlay kết quả phủ toàn vùng */
 .result-overlay {
   position: absolute;
   inset: 0;
@@ -385,6 +430,7 @@ body {
   z-index: 20;
 }
 
+/* Overlay căn giữa trên bàn cờ */
 .board-centered-overlay {
   position: absolute;
   inset: 0;
@@ -395,10 +441,10 @@ body {
   z-index: 19;
 }
 
+/* Card hiển thị kết quả */
 .result-card {
   width: 80%;
   max-width: 520px;
-
 
   background: rgba(10, 20, 40, 0.18);
   backdrop-filter: blur(6px);
@@ -416,15 +462,18 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+/* Tiêu đề trong card kết quả */
 .result-card h2 {
   margin-top: 0;
   color: white;
 }
 
+/* Đoạn văn trong card kết quả */
 .result-card p {
   color: white;
 }
 
+/* Badge nhỏ hiển thị nhãn */
 .badge {
   display: inline-block;
   padding: 6px 12px;
@@ -437,12 +486,14 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
+/* Chữ nhỏ mô tả phụ */
 .small {
   color: #cbd5e1;
   font-size: 14px;
   line-height: 1.5;
 }
 
+/* Mã phòng */
 .room-code {
   font-size: 28px;
   font-weight: 800;
@@ -452,6 +503,7 @@ body {
   margin-bottom: 8px;
 }
 
+/* Màn hình setup phủ toàn bộ */
 .setup-screen {
   position: fixed;
   inset: 0;
@@ -465,6 +517,7 @@ body {
   -webkit-backdrop-filter: blur(10px);
 }
 
+/* Card ở giữa màn hình setup */
 .setup-center-card {
   width: min(92vw, 760px);
   min-height: 460px;
@@ -481,6 +534,7 @@ body {
   justify-content: center;
 }
 
+/* Tiêu đề setup */
 .setup-title {
   margin: 0 0 12px 0;
   text-align: center;
@@ -489,6 +543,7 @@ body {
   color: #ffffff;
 }
 
+/* Phụ đề setup */
 .setup-subtitle {
   margin: 0 0 24px 0;
   max-width: 620px;
@@ -498,15 +553,18 @@ body {
   color: #dbe4ff;
 }
 
+/* Form setup */
 .setup-form {
   width: 100%;
   max-width: 420px;
 }
 
+/* Nhóm field trong form */
 .setup-form-group {
   margin-bottom: 10px;
 }
 
+/* Label trong form */
 .setup-form-group label {
   display: block;
   margin-bottom: 8px;
@@ -514,6 +572,7 @@ body {
   color: #ffffff;
 }
 
+/* Đồng hồ đếm ngược setup */
 .setup-timer {
   width: 120px;
   height: 120px;
@@ -531,12 +590,14 @@ body {
     0 0 60px rgba(124, 58, 237, 0.22);
 }
 
+/* Phiên bản nhỏ của timer */
 .small-timer {
   width: 92px;
   height: 92px;
   font-size: 28px;
 }
 
+/* Khu vực vòng quay random */
 .roulette-stage {
   position: relative;
   width: 320px;
@@ -547,6 +608,7 @@ body {
   margin: 14px 0;
 }
 
+/* Ánh sáng nền của vòng quay */
 .roulette-glow {
   position: absolute;
   width: 260px;
@@ -556,6 +618,7 @@ body {
   filter: blur(10px);
 }
 
+/* Mũi tên chỉ vòng quay */
 .roulette-pointer {
   position: absolute;
   top: 16px;
@@ -570,12 +633,14 @@ body {
   filter: drop-shadow(0 2px 10px rgba(250, 204, 21, 0.45));
 }
 
+/* Vòng quay chính */
 .roulette-wheel {
   position: relative;
   border-radius: 50%;
   animation: spinWheel 1s linear infinite;
 }
 
+/* Kiểu vòng quay lớn */
 .big-wheel {
   width: 240px;
   height: 240px;
@@ -589,6 +654,7 @@ body {
     0 0 70px rgba(37, 99, 235, 0.18);
 }
 
+/* Lõi giữa vòng quay */
 .roulette-core {
   position: absolute;
   inset: 32px;
@@ -601,16 +667,19 @@ body {
     0 0 18px rgba(0, 0, 0, 0.25);
 }
 
+/* Khu chờ hiệu ứng pulse */
 .waiting-stage {
   height: 260px;
 }
 
+/* Hiệu ứng phát sáng khi chờ */
 .waiting-pulse {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(139,92,246,0.95) 0%, rgba(37,99,235,0.55) 55%, rgba(37,99,235,0.08) 100%);
   animation: pulseWait 1.2s ease-in-out infinite;
 }
 
+/* Phiên bản pulse lớn */
 .big-pulse {
   width: 170px;
   height: 170px;
@@ -619,11 +688,13 @@ body {
     0 0 80px rgba(37, 99, 235, 0.16);
 }
 
+/* Animation quay vòng */
 @keyframes spinWheel {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
+/* Animation nhịp phồng khi chờ */
 @keyframes pulseWait {
   0% {
     transform: scale(0.9);
@@ -639,6 +710,7 @@ body {
   }
 }
 
+/* Toast thông báo góc phải dưới */
 .toast {
   position: fixed;
   right: 24px;
@@ -655,18 +727,22 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Toast thông tin */
 .toast-info {
   background: rgba(37, 99, 235, 0.92);
 }
 
+/* Toast cảnh báo */
 .toast-warning {
   background: rgba(234, 88, 12, 0.92);
 }
 
+/* Toast lỗi */
 .toast-error {
   background: rgba(220, 38, 38, 0.92);
 }
 
+/* Responsive cho màn hình <= 1200px */
 @media (max-width: 1200px) {
   .game-layout {
     grid-template-columns: 1fr;
@@ -696,6 +772,7 @@ body {
   }
 }
 
+/* Responsive cho màn hình <= 900px */
 @media (max-width: 900px) {
   .card {
     min-height: auto;
@@ -732,6 +809,7 @@ body {
   }
 }
 
+/* Responsive cho màn hình <= 640px */
 @media (max-width: 640px) {
   .app {
     padding: 14px;
@@ -802,6 +880,7 @@ body {
   }
 }
 
+/* Overlay căn giữa trên bàn cờ, khai báo lại ở cuối file */
 .board-centered-overlay {
   position: absolute;
   inset: 0;
@@ -812,6 +891,7 @@ body {
   z-index: 19;
 }
 
+/* Overlay kết quả, khai báo lại ở cuối file */
 .result-overlay {
   position: absolute;
   inset: 0;
